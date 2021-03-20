@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,12 +13,12 @@ using Xunit;
 
 namespace Presentation.Server.Test
 {
-	public class TestPeopleController
+	public class TestVehicleController
 	{
-		private PeopleController _controller;
+		private VehicleController _controller;
 		private IHttpClientFactory _mockHttpClientFactory;
 
-		public TestPeopleController()
+		public TestVehicleController()
 		{
 			var builder = new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
@@ -32,9 +32,9 @@ namespace Presentation.Server.Test
 				w.EnvironmentName == "Development"
 			));
 			services.AddHttpClient("swapi", c =>
-				{
-					c.BaseAddress = new Uri("https://swapi.dev/api/");
-				});
+			{
+				c.BaseAddress = new Uri("https://swapi.dev/api/");
+			});
 			starup.ConfigureServices(services);
 			_mockHttpClientFactory = services.BuildServiceProvider().GetService<IHttpClientFactory>();
 		}
@@ -43,9 +43,9 @@ namespace Presentation.Server.Test
 		public async Task GetOk()
 		{
 			//Arrange
-			var responseBase = new ResponseBase<People>() { Count = 82, Next = "http://swapi.dev/api/people/?page=2", Previous = null };
+			var responseBase = new ResponseBase<Vehicle>() { Count = 39, Next = "http://swapi.dev/api/vehicles/?page=2", Previous = null };
 			//Act
-			_controller = new PeopleController(_mockHttpClientFactory);
+			_controller = new VehicleController(_mockHttpClientFactory);
 			var result = await _controller.Get();
 			//Assert
 			result.Should().NotBeNull();
@@ -58,10 +58,10 @@ namespace Presentation.Server.Test
 		public async Task GetNotExists()
 		{
 			//Arrange
-			
+
 			//Act
-			_controller = new PeopleController(_mockHttpClientFactory);
-			var result = await _controller.Get("10");
+			_controller = new VehicleController(_mockHttpClientFactory);
+			var result = await _controller.Get("9");
 			//Assert
 			result.Should().BeNull();
 		}
@@ -70,23 +70,23 @@ namespace Presentation.Server.Test
 		public async Task GetByIdOk()
 		{
 			//Arrange
-			var person = new People() { Name = "Luke Skywalker", Url = "https://swapi.dev/api/people/1/" };
+			var planet = new Vehicle() { Name = "Sand Crawler", Url = "http://swapi.dev/api/vehicles/4/" };
 			//Act
-			_controller = new PeopleController(_mockHttpClientFactory);
-			var result = await _controller.GetById("1");
+			_controller = new VehicleController(_mockHttpClientFactory);
+			var result = await _controller.GetById("4");
 			//Assert
 			result.Should().NotBeNull();
-			result.Name.Should().Equals(person.Name);
-			result.Url.Should().Equals(person.Url);
+			result.Name.Should().Equals(planet.Name);
+			result.Url.Should().Equals(planet.Url);
 		}
 
 		[Fact]
 		public async Task GetByIdNotExists()
 		{
 			//Arrange
-			
+
 			//Act
-			_controller = new PeopleController(_mockHttpClientFactory);
+			_controller = new VehicleController(_mockHttpClientFactory);
 			var result = await _controller.GetById("99");
 			//Assert
 			result.Should().BeNull();

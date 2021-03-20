@@ -20,7 +20,7 @@ namespace Presentation.Server.Controllers
 
     [HttpGet]
     [Route("get/{page?}")]
-    public async Task<ResponseBase<People>> GetAll(string page = null)
+    public async Task<ResponseBase<People>> Get(string page = null)
     {
       var result = new ResponseBase<People>();
       var pagination = "";
@@ -38,6 +38,10 @@ namespace Presentation.Server.Controllers
           using (var response = await httpClient.GetAsync("people/" + pagination))
           {
             var apiResponse = await response.Content.ReadAsStringAsync();
+            if (apiResponse.Equals(@"{""detail"":""Not found""}"))
+            {
+              return null;
+            }
             result = JsonConvert.DeserializeObject<ResponseBase<People>>(apiResponse);
           }
         }
@@ -61,6 +65,10 @@ namespace Presentation.Server.Controllers
           using (var response = await httpClient.GetAsync("people/" + idPeople + "/"))
           {
             var apiResponse = await response.Content.ReadAsStringAsync();
+            if (apiResponse.Equals(@"{""detail"":""Not found""}"))
+            {
+              return null;
+						}
             result = JsonConvert.DeserializeObject<People>(apiResponse);
           }
         }

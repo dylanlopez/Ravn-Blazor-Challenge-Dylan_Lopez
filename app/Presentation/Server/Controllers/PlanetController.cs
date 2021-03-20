@@ -20,7 +20,7 @@ namespace Presentation.Server.Controllers
 
     [HttpGet]
     [Route("get/{page?}")]
-    public async Task<ResponseBase<Planet>> GetAll(string page = null)
+    public async Task<ResponseBase<Planet>> Get(string page = null)
     {
       var result = new ResponseBase<Planet>();
       var pagination = "";
@@ -38,6 +38,10 @@ namespace Presentation.Server.Controllers
           using (var response = await httpClient.GetAsync("planets/" + pagination))
           {
             var apiResponse = await response.Content.ReadAsStringAsync();
+            if (apiResponse.Equals(@"{""detail"":""Not found""}"))
+            {
+              return null;
+            }
             result = JsonConvert.DeserializeObject<ResponseBase<Planet>>(apiResponse);
           }
         }
@@ -61,6 +65,10 @@ namespace Presentation.Server.Controllers
           using (var response = await httpClient.GetAsync("planets/" + idPlanet + "/"))
           {
             var apiResponse = await response.Content.ReadAsStringAsync();
+            if (apiResponse.Equals(@"{""detail"":""Not found""}"))
+            {
+              return null;
+            }
             result = JsonConvert.DeserializeObject<Planet>(apiResponse);
           }
         }

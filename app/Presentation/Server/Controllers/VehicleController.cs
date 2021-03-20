@@ -20,7 +20,7 @@ namespace Presentation.Server.Controllers
 
     [HttpGet]
     [Route("get/{page?}")]
-    public async Task<ResponseBase<Vehicle>> GetAll(string page = null)
+    public async Task<ResponseBase<Vehicle>> Get(string page = null)
     {
       var result = new ResponseBase<Vehicle>();
       var pagination = "";
@@ -38,6 +38,10 @@ namespace Presentation.Server.Controllers
           using (var response = await httpClient.GetAsync("vehicles/" + pagination))
           {
             var apiResponse = await response.Content.ReadAsStringAsync();
+            if (apiResponse.Equals(@"{""detail"":""Not found""}"))
+            {
+              return null;
+            }
             result = JsonConvert.DeserializeObject<ResponseBase<Vehicle>>(apiResponse);
           }
         }
@@ -61,6 +65,10 @@ namespace Presentation.Server.Controllers
           using (var response = await httpClient.GetAsync("vehicles/" + idVehicle + "/"))
           {
             var apiResponse = await response.Content.ReadAsStringAsync();
+            if (apiResponse.Equals(@"{""detail"":""Not found""}"))
+            {
+              return null;
+            }
             result = JsonConvert.DeserializeObject<Vehicle>(apiResponse);
           }
         }

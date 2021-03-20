@@ -1,0 +1,61 @@
+﻿@using Presentation.Shared
+
+@if (Details == null)
+{
+	<div class="spinner-border" role="status">
+		<span class="sr-only">Loading...</span>
+	</div>
+}
+else
+{
+	<div class="card bg-dark text-white">
+		<div class="card-body">@HeaderTitle of Star Wars</div>
+	</div>
+
+	<table class="table dataTable no-footer">
+		<thead>
+			<tr role="row">
+				@foreach (var header in Headers)
+				{
+					<td><strong>@header</strong></td>
+				}
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var detail in Details)
+			{
+				<tr role="row" class="odd">
+
+					@foreach (var property in PropertiesToShow)
+					{
+						<td>@detail.GetType().GetProperty(property).GetValue(detail).ToString()</td>
+					}
+				</tr>
+			}
+		</tbody>
+		<tfoot>
+			<tr>
+				<td colspan="2">
+					<button type="button" class="btn btn-link" @onclick="@(() => LoadMoreClick.InvokeAsync())">Load more...</button>
+				</td>
+			</tr>
+		</tfoot>
+	</table>
+}
+
+@code {
+	[Parameter]
+	public string HeaderTitle { get; set; }
+
+	[Parameter]
+	public string[] Headers { get; set; }
+
+	[Parameter]
+	public string[] PropertiesToShow { get; set; }
+
+	[Parameter]
+	public IEntity[] Details { get; set; }
+
+	[Parameter] 
+	public EventCallback<string> LoadMoreClick { get; set; }
+}

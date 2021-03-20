@@ -1,0 +1,68 @@
+﻿@page "/listvehicle"
+@using Presentation.Shared
+@inject NavigationManager navigation;
+@inject HttpClient http
+
+@{
+	string[] headers = { "Name", "Model", "Manufacturer", "CostInCredits", "Length" };
+
+	string[] propertiesToShow = { "Name", "Model", "Manufacturer", "CostInCredits", "Length" };
+}
+
+<ListRazor HeaderTitle="Vehicles"
+					 Headers=headers
+					 PropertiesToShow=propertiesToShow
+					 Details=list
+					 LoadMoreClick="LoadVehicles" />
+
+@code {
+	private Vehicle[] vehicles = null;
+	private List<Vehicle> listVehicle = null;
+	private IEntity[] list;
+	private ResponseBase<Vehicle> responseVehicle = null;
+
+	protected async override Task OnInitializedAsync()
+	{
+		//Console.WriteLine("OnInitializedAsync");
+		try
+		{
+			await LoadVehicles();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+		}
+	}
+
+	public async Task LoadVehicles()
+	{
+		Console.WriteLine("LoadVehicles");
+		vehicles = null;
+		var next = string.Empty;
+		try
+		{
+			if (responseVehicle != null)
+			{
+				if (responseVehicle.Next != null)
+				{
+					next = responseVehicle.Next.Substring(36, responseVehicle.Next.Length - 36);
+					Console.WriteLine(next);
+				}
+			}
+			if (listVehicle == null)
+			{
+				listVehicle = new List<Vehicle>();
+			}
+			responseVehicle = await http.GetFromJsonAsync<ResponseBase<Vehicle>>("api/vehicle/get/" + next);
+			vehicles = new Vehicle[responseVehicle.Results.Count];
+			vehicles = responseVehicle.Results.ToArray();
+			listVehicle.AddRange(vehicles);
+			list = listVehicle.ToArray();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+			Console.WriteLine(ex.InnerException.Message);
+		}
+	}
+}

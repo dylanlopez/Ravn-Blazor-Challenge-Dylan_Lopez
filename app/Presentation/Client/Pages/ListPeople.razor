@@ -1,0 +1,138 @@
+﻿@page "/listpeople"
+@using Presentation.Shared
+@inject NavigationManager navigation;
+@inject HttpClient http
+
+@{
+	string[] headers = { " ", " " };
+
+	string[] propertiesToShow = { "Name", "Gender", "HomePlanet" };
+}
+
+@if (listPeople == null)
+{
+	<div class="spinner-border" role="status">
+		<span class="sr-only">Loading...</span>
+	</div>
+}
+else
+{
+	<div class="card bg-dark text-white">
+		<div class="card-body">People of Star Wars</div>
+	</div>
+
+	<table class="table dataTable no-footer">
+		<tbody>
+			@foreach (var people in listPeople)
+			{
+				<tr role="row">
+					<td>
+						<h4>@people.Name</h4>
+						<p>@people.Gender from @people.HomePlanet.Name</p>
+					</td>
+					<td>
+						<a @onclick="@(()=>ShowDetail(people.Url))"><span class="oi oi-chevron-right" aria-hidden="true"></span></a>
+					</td>
+				</tr>
+			}
+		</tbody>
+		<tfoot>
+			<tr>
+				@if (people == null)
+				{
+					<td colspan="2">
+						<div class="spinner-border" role="status">
+							<span class="sr-only">Loading...</span>
+						</div>
+					</td>
+				}
+			</tr>
+			<tr>
+				<td colspan="2">
+					<button type="button" class="btn btn-link" @onclick="@(()=>LoadPeople())">Load more...</button>
+				</td>
+			</tr>
+		</tfoot>
+	</table>
+}
+
+@code {
+	private People[] people = null;
+	private List<People> listPeople = null;
+	private ResponseBase<People> responsePeople = null;
+
+	protected async override Task OnInitializedAsync()
+	{
+		//Console.WriteLine("OnInitializedAsync");
+		try
+		{
+			await LoadPeople();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+		}
+	}
+
+	private async Task LoadPeople()
+	{
+		//Console.WriteLine("LoadPeople");
+		people = null;
+		var next = string.Empty;
+		try
+		{
+			if (responsePeople != null)
+			{
+				if (responsePeople.Next != null)
+				{
+					next = responsePeople.Next.Substring(34, responsePeople.Next.Length - 34);
+					//Console.WriteLine(next);
+				}
+			}
+			if (listPeople == null)
+			{
+				listPeople = new List<People>();
+			}
+			responsePeople = await http.GetFromJsonAsync<ResponseBase<People>>("api/people/get/" + next);
+			Console.WriteLine(responsePeople);
+			people = new People[responsePeople.Results.Count];
+			people = responsePeople.Results.ToArray();
+			await (FindHomePlanet(people));
+			listPeople.AddRange(people);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+		}
+	}
+
+	private async Task FindHomePlanet(People[] people2)
+	{
+		//Console.WriteLine("FindHomePlanets");
+		try
+		{
+			if (listPeople != null)
+			{
+				foreach (var person in people2)
+				{
+					var idPlanet = person.Homeworld.Substring(29, person.Homeworld.Length - 29);
+					//Console.WriteLine(idPlanet);
+					var homePlanet = await http.GetFromJsonAsync<Planet>("api/planet/getById/" + idPlanet);
+					person.HomePlanet = homePlanet;
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+		}
+	}
+
+	public void ShowDetail(string url)
+	{
+		//Console.WriteLine("ShowDetail");
+		var id = url.Substring(28, url.Length - 29);
+		//Console.WriteLine(id);
+		navigation.NavigateTo("/formPeople/" + id);
+	}
+}

@@ -1,0 +1,68 @@
+﻿@page "/listplanet"
+@using Presentation.Shared
+@inject NavigationManager navigation;
+@inject HttpClient http
+
+@{
+	string[] headers = { "Name", "Diameter", "Terrain", "Population" };
+
+	string[] propertiesToShow = { "Name", "Diameter", "Terrain", "Population" };
+}
+
+<ListRazor HeaderTitle="Planets" 
+					 Headers=headers 
+					 PropertiesToShow=propertiesToShow 
+					 Details=list 
+					 LoadMoreClick="LoadPlanets"/>
+
+@code {
+	private Planet[] planets = null;
+	private List<Planet> listPlanet = null;
+	private IEntity[] list;
+	private ResponseBase<Planet> responsePlanet = null;
+
+	protected async override Task OnInitializedAsync()
+	{
+		//Console.WriteLine("OnInitializedAsync");
+		try
+		{
+			await LoadPlanets();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+		}
+	}
+
+	public async Task LoadPlanets()
+	{
+		//Console.WriteLine("LoadPlanets");
+		planets = null;
+		var next = string.Empty;
+		try
+		{
+			if (responsePlanet != null)
+			{
+				if (responsePlanet.Next != null)
+				{
+					next = responsePlanet.Next.Substring(35, responsePlanet.Next.Length - 35);
+					//Console.WriteLine(next);
+				}
+			}
+			if (listPlanet == null)
+			{
+				listPlanet = new List<Planet>();
+			}
+			responsePlanet = await http.GetFromJsonAsync<ResponseBase<Planet>>("api/planet/get/" + next);
+			planets = new Planet[responsePlanet.Results.Count];
+			planets = responsePlanet.Results.ToArray();
+			listPlanet.AddRange(planets);
+			list = listPlanet.ToArray();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+			Console.WriteLine(ex.InnerException.Message);
+		}
+	}
+}

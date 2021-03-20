@@ -1,0 +1,80 @@
+﻿@page "/formPeople/{Id}"
+@using Presentation.Shared
+@inject HttpClient http
+
+
+@if (People == null)
+{
+	<div class="spinner-border" role="status">
+		<span class="sr-only">Loading...</span>
+	</div>
+}
+else
+{
+	<div class="container">
+		<p><strong>General Information</strong></p>
+		<div class="row">
+			<div class="col col-md-3 text-left"><label>Eye Color</label></div>
+			<div class="col col-md-6 text-right"><label><strong>@People.EyeColor</strong></label></div>
+		</div>
+		<div class="row">
+			<div class="col col-md-3 text-left"><label>Hair Color</label></div>
+			<div class="col col-md-6 text-right"><label><strong>@People.HairColor</strong></label></div>
+		</div>
+		<div class="row">
+			<div class="col col-md-3 text-left"><label>Skin Color</label></div>
+			<div class="col col-md-6 text-right"><label><strong>@People.SkinColor</strong></label></div>
+		</div>
+		<div class="row">
+			<div class="col col-md-3 text-left"><label>Birth Year</label></div>
+			<div class="col col-md-6 text-right"><label><strong>@People.BirthYear</strong></label></div>
+		</div>
+		<br />
+		<p><strong>Vehicles</strong></p>
+		<ul>
+			@foreach (var vehicle in People.Vehicles)
+			{
+				<li>@vehicle.Name</li>
+			}
+		</ul>
+	</div>
+}
+
+@code {
+	[Parameter]
+	public string Id { get; set; }
+
+	public People People { get; set; } = null;
+
+	protected async override Task OnParametersSetAsync()
+	{
+		//Console.WriteLine("OnParametersSetAsync");
+		//Console.WriteLine(Id);
+		People = await http.GetFromJsonAsync<People>("api/people/getById/" + Id);
+		await FindVehicles();
+	}
+
+	private async Task FindVehicles()
+	{
+		try
+		{
+			Console.WriteLine("FindVehicles");
+			if (People != null)
+			{
+				People.Vehicles = new List<Vehicle>();
+				foreach (var urlVehicle in People.UrlVehicles)
+				{
+					var idVehicle = urlVehicle.Substring(30, urlVehicle.Length - 30);
+					Console.WriteLine(idVehicle);
+					var vehicle = await http.GetFromJsonAsync<Vehicle>("api/vehicle/getById/" + idVehicle);
+					People.Vehicles.Add(vehicle);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+		}
+	}
+
+	}
